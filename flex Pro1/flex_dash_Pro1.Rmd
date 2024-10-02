@@ -1,0 +1,848 @@
+---
+title: "Simple dashboard with flexdashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+    # source_code: https://github.com/Veny-hkw/Projet_dashboard
+    source_code: embed
+---
+
+```{=html}
+<style type="text/css" media="all">
+          body{
+                    font-family: Arial;
+                    font-size: 16px;
+                    font-stretch: 2px;
+                    font-weight: normal;
+                    line-height: 2;
+                    text-align: justify;
+          }
+</style>
+```
+```{r setup, include=FALSE}
+
+# dashboard
+library(flexdashboard)
+
+# control value box
+library(scales)
+
+# data analysis
+library(tidyverse)
+library(plyr)
+
+# statistics
+library(prettyR)
+library(broom)
+
+# visualization
+library(plotly)
+library(DT)
+
+# style
+library(distill)
+library(bslib)
+
+# html tools
+library(htmltools)
+
+# install.packages("bsicons")
+library(usethis)
+```
+
+```{r include=FALSE}
+
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+# Summary {data-navmenu="Home"}
+
+## column {data-width="350"}
+
+### **Résumé du travail**
+
+Le présent document est une introduction (premiers pas) à la création des tableaux de bord et de rapports sous **R**.\
+
+Dans le cadre de cette iniation, nous aurons principalement besoin du package (\*\*paquet\*\* en français) **flexdashboard** qui permet de produire automatiquement des rapports et des tableaux de bord de très bonne qualité.
+
+L'objet de notre travail sera :
+
+-   de découvrir, comprendre et maitriser de nouveaux outils, en l'occurence le package **flexdashboar** ;
+-   de renforcer les capacités dans l'analyse des données ;
+-   d'acquérir de nouvelles compétences dans la création des visuels.
+
+Hormis le package flexdashboard, nous comptons également apprendre l'usage d'autres packages tels que :
+
+-   **Shiny** : utilisé dans la création d'applications web. Il est très puissant, flexible et accessible ;
+-   **DT** : issu de **javascript**, est ulisé en R pour sa très grande performance dans la création des tableaux très pofessionel. Nous nous concentrerons sur **datatable** sa principale fonction ;
+-   **Plotly** : spécialisé dans la création des graphiques interactifs ;
+-   Etc.
+
+**NB** : il ne s'agit pour nous de faire un tableau avec des sections très rigoureuses, c'est juste à but d'apprentissage. A cet effet, ne soyez pas rigoureux sur les analyses effectuées.
+
+## column {data-width="350"}
+
+### **Comment allons-nous travailer ?**
+
+Nous fonctionnerons essentiellement par rubrique d'exercice pratique.
+
+Pour gagner en temps et en efficacité, nous mobiliserons divers supports qui nous aiderons à capitaliser nos efforts.\
+
+En effet, nous utiliserons :
+
+-   **des tutoriel** (vidéos, articles web)
+-   **Stackoverflow** plateforme d'aide en ligne dédiée aux programmeurs
+-   **Livres** si possible
+-   **Etc.**
+
+Nous choisissons une approche par la pratique pour favoriser une assimilation aisée des process. En fait, la programmation exige beaucoup de technique, c'est pour quoi nous ferons beaucoup de pratiques et en parallèle beaucoup de lecture pour comprendre les concepts théoriques. Ainsi, les lectures que nous ferons auront pour vocation de soutenir la pratique.
+
+**PS** : Nous nous axerons suffisamment sur la pratique pour aller vite et loin.
+
+Au fil du travail nos découvertes pourront modifier nos objectifs de départ. En effet, nous refusons de demeurer statique tandis que le monde (programmation, etc.) évolue rapidement.
+
+# Projets {data-navmenu="Perspectives" data-icon="fa-list"}
+
+Après les applications, nous ferons trois projets visant à consolider nos acquis et de progresser. Nous voulons faire de ces nouvelles compétences un réel atout qui nous permettra de réaliser des choses utiles. La section suivante présentera de façon détaillée, les différents projets que nous effectuerons.
+
+## column {data-width="150"}
+
+### Projet 1 : Tableau de Bord Simple
+
+Ce premier projet, le plus simple, aura pour objet de cconcevoir un tableau de bord très simple, basique en guise d'introduction.
+
+Nous chercherons à comprendre la logique fondamentale en termes d'élaboration de tableaux de bord sous R, avec le package **flexdashbord**.
+
+Nous verrons aussi comment introduire des concepts statistiques ou de data analyse dans cette production.
+
+## column {data-width="150"}
+
+### Projet 2 : Application Shiny-Flexdashboard
+
+Le second projet quant à lui sera axé sur l'amélioration du premier projet. Il consistera à faire évoluer le premier projet, à le surpasser.
+
+Par conséquent, nous augmenterons en technicité et pratique, pour avoir des visuels meilleur que les premiers.
+
+Nous introduirons dans notre apprentissage l'usage d'un nouveau package qui est la combinaison de deux packages : **Shiny-Flexdashboard**.\
+Comme c'est une introduction au package shiny, nous irons par tatons. Tableaux, figures interactives, etc.
+
+## column {data-width="150"}
+
+### Projet 3 : Création d'un Rapport Complet
+
+Dans ce dernier projet, nous ferons le condensé des connaissances acquises des précédents projets pour élaborer ce projet.
+
+<!-- # overview {.sidebar} -->
+
+# Description des données {data-navmenu="Exercice 1"}
+
+## columns
+
+### Données
+
+```{r}
+flex_data <- starwars[, c(1,2,3, 8, 9)]
+
+# This tab is exacted from starwars
+
+flex_data <- flex_data %>% 
+                    as.data.frame()
+
+flex_data <- flex_data %>% 
+          mutate(prenom = str_remove_all(name, pattern = "\\s\\w+"), 
+                 .before = height) %>% 
+          select(-name) # %>% 
+          # rename(
+          #           c("height" = height, 
+          #             "mass" = mass, 
+          #             "sex" = sex, 
+          #             "gender" = gender)
+          #        )
+
+# sketch <- htmltools::withTags( table(
+#           class = "display", 
+#           thead(
+#                     tr(
+#                        th(rowspan = 2, "prenom"),
+#                        th(colspan = 2, "numeric"),
+#                        th(colspan = 2, "factor")
+#                     ),
+#                     tr(
+#                       lapply(rep(c("height", "mass", "sex", "gender"), 1), th)          
+#                     )
+#           )
+# ))
+
+flex_data_tab <- flex_data %>% 
+          
+          datatable(
+                    # container = sketch,
+                    rownames = F, 
+                    extensions = "Scroller", 
+                    width = "100%", 
+                    style = "jqueryui", 
+                    class = "border-cell compact stripe hover", 
+                    options = list(dom = "dt",
+                              scrolly = "300", scroller = T, deferRender = T, 
+                              columnDefs = list(
+                                        list(className = "dt-center", targets = "_all")
+                              )
+                    )
+          ) %>% formatStyle(columns = c("height", "mass"),
+                    target = c("cell", "row"), 
+                    backgroundColor = "white", #rgb(0.8, 0.0, 0.2, 0.1), 
+                    fontWeight = "bold"
+          )
+
+# datatable(flex_data, container = sketch, rownames = F)
+
+flex_data_tab
+
+```
+
+## columns
+
+### Observations
+
+```{r}
+
+valueBox((paste(87)), icon = "fa-pencil", 
+         caption = "Nombre d'observations", color = "orange")
+```
+
+### Variables
+
+```{r}
+
+valueBox(paste(5), icon = "fa-table", 
+         caption = "Nombre de variables", color = "yellow")
+```
+
+### types des variables
+
+```{r}
+valueBox(caption = "Variables numériques : Height - Mass",
+         paste(2), icon = "fa-bank",
+         color = "cornflowerblue")
+
+```
+
+### types des variables
+
+```{r}
+valueBox(caption = "Variables catégorielles : prenom - gender - sex", 
+         paste(3), 
+         icon = "fa-briefcase",
+         color = "pink")
+```
+
+# Analyse des groupes {data-navmenu="Exercice 1"}
+
+## columns
+
+### Taille des hommes
+
+```{r include=FALSE}
+
+flex_data_hei <- flex_data %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "masculine") %>% 
+          transmute(genre = gender, height = height/100) %>% 
+          ddply(.(genre), summarise, 
+                height = list(minimum = round(min(height, na.rm = T), 2), 
+                              moyenne = round(mean(height, na.rm = T), 2),
+                              ecart.type = round(sd(height, na.rm = T), 2),
+                              median = round(median(height, na.rm = T), 2), 
+                              maximum = round(max(height, na.rm = T), 2)
+                                  )
+          ) %>% unnest(c(height))
+
+flex_data_hei$parameters <- rep(c("min", "mean", "sd", "median", "max"))
+
+flex_data_hei %>% datatable(rownames = F, class = "border-cell compact stripe hover",
+                            style = "bootstrap5", width = "20%", 
+                            extensions = "Scroller", 
+                            options = list(dom = "dt",
+                                      scrolly = "50", 
+                                      scroller = T, deferRender = T, 
+                                      columnDefs = list(
+                                                list(className = "dt-center", 
+                                                     targets = "_all"))
+                      ) 
+          ) %>% 
+                 formatStyle(columns = "genre", 
+                             fontWeight = "bold", 
+                             color = "black", 
+                             backgroundColor = "lightskyblue"
+                     ) 
+
+
+flex_height <- flex_data %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "feminine") %>% 
+          transmute(genre = gender, height = height/100) %>% 
+          ddply(.(genre), summarise, 
+                height = list(minimum = round(min(height, na.rm = T), 2), 
+                              moyenne = round(mean(height, na.rm = T), 2),
+                              ecart.type = round(sd(height, na.rm = T), 2),
+                              median = round(median(height, na.rm = T), 2), 
+                              maximum = round(max(height, na.rm = T), 2)
+                                  )
+          ) %>% unnest(c(height))
+
+flex_height$parameters <- rep(c("min", "mean", "sd", "median", "max"))
+
+flex_height %>% datatable(rownames = F, class = "border-cell compact stripe hover",
+                            style = "bootstrap5", width = "100%", 
+                            extensions = "Scroller", 
+                            options = list( dom = "dt",
+                                      scrolly = "300", 
+                                      scroller = T, deferRender = T, 
+                                      columnDefs = list(
+                                                list(className = "dt-center", 
+                                                     targets = "_all"))
+                      ) 
+          ) %>% 
+                 formatStyle(columns = "genre", 
+                             fontWeight = "bold", 
+                             color = "black", 
+                             backgroundColor = "lightskyblue"
+                     )
+
+
+# df_flex <- full_join (x = flex_data_hei, y = flex_height, by = "genre") 
+# 
+# df_flex$height <- c(df_flex$height.x[1:5], df_flex$height.y[6:10])
+# 
+# df_flex$parameters <- c(df_flex$parameters.x[1:5], df_flex$parameters.y[6:10])
+# 
+# df_flex <- df_flex %>% 
+#           select(genre, height, parameters)
+
+
+```
+
+```{r}
+# 
+# df_flex %>% 
+#           datatable(
+#                     # container = sketch,
+#                     rownames = F, 
+#                     extensions = "Scroller", 
+#                     width = "0%", 
+#                     style = "jqueryui", 
+#                     class = "border-cell compact stripe hover", 
+#                     options = list(dom = "dt",
+#                               scrolly = "10", scroller = T, deferRender = T, 
+#                               columnDefs = list(
+#                                         list(className = "dt-center", targets = "_all")
+#                               )
+#                     )
+#           ) %>% 
+#                  formatStyle(columns = "genre",
+#                              target = c("row"),
+#                              fontWeight = "bold", 
+#                              color = "black", 
+#                              backgroundColor = "lightskyblue"
+#                      )
+
+
+```
+
+```{r}
+flex_data_hei %>% 
+          knitr::kable()
+```
+
+### Mass des hommes
+
+```{r include=FALSE}
+flex_mass_m <- flex_data %>% 
+          group_by(gender) %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "masculine") %>% 
+          select( mass)
+
+flex_mass_m <- flex_mass_m %>% 
+          ddply(
+               .(gender), summarize, 
+                mass = list(
+                          min = round(min(mass, na.rm = T), 2),
+                          mean = round(mean(mass, na.rm = T), 2),
+                          sd = round(sd(mass, na.rm = T), 2),
+                          median = round(median(mass, na.rm = T), 2),
+                          max = round(max(mass, na.rm = T), 2)
+                )     
+                    
+          ) %>% unnest(cols = "mass")
+
+
+flex_mass_m$paramters <- c("min", "mean", "sd", "median", "max")
+
+gauge
+```
+
+```{r}
+flex_mass_m %>% 
+          knitr::kable()
+```
+
+## columns
+
+### Taille des femmes
+
+```{r include=FALSE}
+
+flex_mass_m <- flex_data %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "masculine") %>% 
+          # transmute(gender = genre) %>% 
+          ddply(("gender"), summarize, values = list(
+                    round(min(mass, na.rm = T), 2),
+                    round(mean(mass,na.rm = T), 2),
+                    round(sd(mass, na.rm = T), 2),
+                    round(median(mass, na.rm = T), 2),
+                    round(max(mass, na.rm = T), 2)
+          ) 
+                    
+) %>% unnest(c(values))
+
+flex_mass_m$parameters <- rep(c("min", "mean", "sd", "median", "max"))
+
+flex_mass_m %>% datatable(rownames = F, class = "border-cell compact stripe hover",
+                            style = "bootstrap5", width = "100%", 
+                            extensions = "Scroller", 
+                            options = list( dom = "dt",
+                                      scrolly = "300", 
+                                      scroller = T, deferRender = T, 
+                                      columnDefs = list(
+                                                list(className = "dt-center", 
+                                                     targets = "_all"))
+                      ) 
+          ) %>% 
+                 formatStyle(columns = "gender", 
+                             fontWeight = "bold", 
+                             color = "black", 
+                             backgroundColor = "lightgreen"
+                    ) 
+
+
+
+flex_mass <- flex_data %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "feminine") %>% 
+          # transmute(gender = genre) %>% 
+          ddply(("gender"), summarize, values = list(
+                    round(min(mass, na.rm = T), 2),
+                    round(mean(mass,na.rm = T), 2),
+                    round(sd(mass, na.rm = T), 2),
+                    round(median(mass, na.rm = T), 2),
+                    round(max(mass, na.rm = T), 2)
+          ) 
+                    
+) %>% unnest(c(values))
+
+
+flex_mass$parameters <- rep(c("min", "mean", "sd", "median", "max"))
+
+flex_mass %>% datatable(
+          rownames = F, class = "border-cell compact stripe hover",
+          style = "bootstrap5", width = "100%", 
+          # extensions = "Scroller", 
+          options = list( dom = "dt",
+                    # scrolly = "300", 
+                    # scroller = T, deferRender = T,
+                    columnDefs = list(
+                              list(className = "dt-center", 
+                                   targets = "_all"))
+                      ) 
+          ) %>% 
+                 formatStyle(columns = "gender", 
+                             fontWeight = "bold", 
+                             color = "black", 
+                             backgroundColor = "lightgreen"
+                     ) 
+
+
+df_m.flex <- full_join(flex_mass_m, flex_mass, by = "gender")
+
+df_m.flex$mass <- c(df_m.flex$values.x[1:5], df_m.flex$values.y[6:10])
+
+df_m.flex$parameters <- c(df_m.flex$parameters.x[1:5], df_m.flex$parameters.y[6:10])
+
+df_m.flex <- df_m.flex %>% 
+          select(gender, mass, parameters)
+```
+
+```{r include=FALSE}
+
+df_m.flex %>% 
+          datatable(
+                    rownames = F, 
+                    extensions = "Scroller", 
+                    width = "0%", 
+                    style = "jqueryui", 
+                    class = "border-cell compact stripe hover", 
+                    options = list(dom = "dt",
+                              scrollx = T , scroller = T, deferRender = T, 
+                              columnDefs = list(
+                                        list(className = "dt-center", targets = "_all")
+                              )
+                    )
+          ) %>% 
+                 formatStyle(columns = "gender",
+                             target = c("row"),
+                             fontWeight = "bold", 
+                             color = "black", 
+                             backgroundColor = "lightskyblue"
+                     )
+
+```
+
+```{r}
+
+flex_height %>% 
+          knitr::kable()
+```
+
+### Mass des femmes
+
+```{r include=FALSE}
+
+flex_mass_f <- flex_data %>% 
+          group_by(gender) %>% 
+          filter(!is.na(gender)) %>% 
+          filter(gender == "feminine") %>% 
+          select( mass)
+
+
+flex_mass_f <- flex_mass_f %>% 
+          ddply(
+               .(gender), summarize, 
+                mass = list(
+                          min = round(min(mass, na.rm = T), 2),
+                          mean = round(mean(mass, na.rm = T), 2),
+                          sd = round(sd(mass, na.rm = T), 2),
+                          median = round(median(mass, na.rm = T), 2),
+                          max = round(max(mass, na.rm = T), 2)
+                )     
+                    
+          ) %>% unnest(cols = "mass")
+
+
+flex_mass_f$paramters <- c("min", "mean", "sd", "median", "max")
+```
+
+```{r}
+flex_mass_f %>% 
+          knitr::kable()
+```
+
+# Analyse graphique {data-navmenu="Exercice 1"}
+
+## columns
+
+### Comparaison de la taille/genre
+
+```{r}
+
+plot_ly(flex_data, x = ~gender, y = ~height
+        
+  ) %>% 
+layout(title = "Comparaison de la taille",
+       xaxis = list(
+                 # type = "category", # what is this ?
+                 title = "Genre", 
+                 range = c(1,1)
+                 # autorange = "reversed"
+                 ),
+       yaxis = list(
+                 title = "Taille"
+                 )
+       )
+```
+
+## columns
+
+### Comparaison de la masse/genre
+
+```{r}
+
+
+plot_ly(flex_data, x = ~gender, y = ~mass
+        
+  ) %>% 
+layout(title = "Comparaison de la masse",
+       xaxis = list(
+                 # type = "category", # what is this ?
+                 title = "Genre", 
+                 range = c(1,1)
+                 # autorange = "reversed"
+                 ),
+       yaxis = list(
+                 title = "Masse"
+                 )
+       )
+```
+
+# Données {data-navmenu="Exercice 2" data-icon="fa-list"}
+
+## column
+
+### Data
+
+```{r}
+# library(viridis)
+# library(wesanderson)
+
+set.seed(123)
+
+x <- rnorm(100, 0, 1)
+y <- rnorm(100, 0, 1)
+z <- factor(rep(c("Groupe A","Groupe B", "Groupe C", "Groupe D"), 25
+          
+               )
+)
+
+
+df_xyz <- data.frame(Groupes = z, variable_1 = x, variable_2 = y) 
+
+df_xyz %>% 
+          datatable(
+                    rownames = F, 
+                    style = "bulma",
+                    class = "border-cell stripe hiver compact", 
+                    extensions = "Scroller",
+                    options = list(dom = "bfrts",lengthMenu = list(100),
+                              columnDefs = list(
+                                        list(className = "dt-center", targets = "_all")
+                                   ),
+                              scoller = T
+                    )
+          )
+```
+
+## columns
+
+### Histogramme (var 1)
+
+```{r}
+
+hist(df_xyz$variable_1, 
+     col = "deepskyblue", border = "black", 
+     xlab = "", ylab = "", main = "Histogram variable 1")
+```
+
+### Histogramme (var 2)
+
+```{r}
+
+hist(df_xyz$variable_2, 
+     col = "coral", border = TRUE, xlab = "", 
+     ylab = "", main = "Histogram variable 2")
+```
+
+# Anova {data-navmenu="Exercice 2"}
+
+## columns {data-width="400"}
+
+### Anova (var 1) : graphique
+
+```{r}
+
+ggplot(df_xyz, aes(Groupes, variable_1, fill = Groupes))+
+          geom_boxplot(show.legend = F)
+
+```
+
+### Anova (var 1) : modele
+
+```{r}
+mod1 <- lm(variable_1~Groupes, data = df_xyz)
+
+anova(mod1)
+```
+
+**PS** : La plus value Pr (**0.8381**) n'est pas significative donc cette analyse est juste un exercice servant à la création d'un dashboard sous R.
+
+## columns {data-width="400"}
+
+### Anova (var 2) : graphique
+
+```{r}
+
+ggplot(df_xyz, aes(Groupes, variable_2, fill = Groupes))+
+          geom_boxplot(show.legend = F)
+
+
+```
+
+### Anova (var 2) : modele
+
+```{r}
+mod2 <- lm(variable_2~Groupes, data = df_xyz)
+
+anova(mod2)
+```
+
+**PS** : La plus value Pr (**0.3853**) n'est pas significative donc cette analyse est juste un exercice servant à la création d'un dashboard sous R.
+
+# Autres données {data-navmenu="Exercice 2"}
+
+## columns
+
+### Données
+
+```{r include=FALSE}
+
+# make a look at
+str(EuStockMarkets)
+
+# format data as a data.frame 
+EuStock_Mark <- as.data.frame(EuStockMarkets)
+
+# Declare date
+EuStock_Mark$Date <- as.numeric(time(EuStockMarkets))
+
+# Tidy data
+tidy_stock <- tidy(EuStockMarkets) %>% 
+          rename(Date = index, 
+                 stock_indice = series,
+                 price = value)
+```
+
+```{r}
+
+tidy_stock$Date <- tidy_stock$Date %>% round()
+datatable(data = tidy_stock, 
+          class = "strip compact hover cell-border",
+          rownames = F, 
+          extensions = c("Scroller", "Buttons"),
+          width = "1000%",
+          style = "bulma",
+          caption = htmltools::tags$caption(
+                    style = "color: blue; text-align = justify; caption-side: top; font-weight:bold", "Table 2 : Indices financiers" ),
+          options = list(dom = "dt", lengthChange = F, 
+                         columnDefs = list( list (className = "dt-center", 
+                                                 targets = "_all")), 
+                         scroller = T, buttons = c("csv"), scrolly = "3000", deferRender = T
+                         )
+          )
+
+tidy_stock
+```
+
+## columns
+
+### Variables
+
+```{r}
+valueBox(value = paste0(3, "  vars"), 
+         caption = paste("Date", "stock_indice", "price", sep = ";"), 
+         icon = "fa-pencil"
+         )
+```
+
+### Observations
+
+```{r}
+valueBox(value = paste0(7440, "  Obs")  , 
+         caption = "Observations represent data frame rows",
+         icon = "fa-bank", 
+         color = "lightblue"
+         )
+
+```
+
+### Times series or chronologics series design data evolution along the time. TS are important to predict futur events using the past. TS consider time "t" and time "t-1", there is a correlation between t and t-1, this is the autocorrelation of observations.
+
+```{r}
+
+valueBox(value = " ", 
+         caption = cat("Times series definition"), 
+         icon = "fa-line-chart", 
+         color = "orange"
+      
+       )
+```
+
+# Analyse graphique : times series {data-navmenu="Exercice 2"}
+
+## columns
+
+### Graphique non interactif
+
+```{r}
+tidy_stock <- tidy(EuStockMarkets) %>% 
+          rename(Date = index, 
+                 stock_indice = series,
+                 price = value)
+
+tidy_stock %>% 
+          ggplot(aes(x = Date, y = price))+
+          geom_line(aes(color = stock_indice))+
+          scale_color_brewer(palette = "Set1")+
+          theme_classic() +
+          scale_x_continuous(breaks = seq(1991, 1998, by = 1))+
+          labs(title = "Price evolution by stock indice (1991-1998)", 
+               x = "Date", y = "Price")+
+          theme(axis.ticks = element_blank(),
+                plot.title = element_text(size = 12, hjust = 0.6,
+                                          face = "bold", color = "black"), 
+                legend.title = element_blank(), 
+                panel.border = element_rect(color = "blue", 
+                                            linewidth = 4, fill = NA,inherit.blank = T)
+                ) 
+```
+
+## columns
+
+### Graphique interactif : plotly
+
+```{r}
+
+design <- list(
+          linecolor = "blue", # instead of do toRGB(), just put color
+          showline = T,
+          linewidth = 4,
+          
+          # gridcolor = toRGB("grey50"),
+          showgrid = F,
+          gridwidth = 1, 
+          
+          zeroline  = T, 
+          # zerolinecolor = toRGB("pink"),
+          zerolinewidth = 2,
+          
+          mirror = T #  "ticks"
+          
+          # showticklabels = T, 
+          # autoticks = F,
+          # ticks = "outside",
+          # tick0 = 0,
+          # ticklen = 10,
+          # tickcolor = toRGB("black"),
+          # tickwidth = 2,
+          # showtick = F
+)
+
+
+
+
+tidy_stock %>% 
+          plot_ly(x = ~Date) %>%  
+          add_lines(y = ~price, linetype = ~stock_indice) %>% 
+          layout(xaxis = ~design, yaxis = ~design,
+                 title = "Price evolution by stock indice (1991-1998)",
+                 xaxis = list(
+                           type = "categorical",
+                           title = "Date"
+                           ),
+                 yaxis = list(
+                           title = "Prices"
+                           )
+                 
+                 )
+
+```
